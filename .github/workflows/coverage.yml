@@ -2,9 +2,7 @@ name: Code Coverage
 
 on:
   - pull_request
-
-env:
-  THRESHOLD-TOTAL: 98
+  - push
 
 jobs:
   test:
@@ -34,4 +32,6 @@ jobs:
         uses: vladopajic/go-test-coverage@v2
         with:
           profile: cover.out
-          threshold-total: ${{env.THRESHOLD-TOTAL}}
+          threshold-file: 0
+          threshold-package: 0
+          threshold-total: 100
