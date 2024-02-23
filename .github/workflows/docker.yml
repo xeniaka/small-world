@@ -1,0 +1,51 @@
+name: Docker
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up env
+        id: set-env
+        run: |
+          echo "build-time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+          echo "git-commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v3
+        with:
+          build-args: |
+            BUILD_TIME=${{ steps.set-env.outputs.build-time }}
+            GIT_COMMIT=${{ steps.set-env.outputs.git-commit }}
+            GO_CMD=${{ matrix.cmd }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: build/Dockerfile
+          platforms: linux/amd64
+          pull: true
+          push: ${{ inputs.push }}
+          ssh: default
+          tags: ${{ secrets.REGISTRY_HOST }}/${{ inputs.application }}-${{ matrix.cmd }}:${{ inputs.tag }}
