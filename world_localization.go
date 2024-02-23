@@ -23,7 +23,7 @@ type Position struct {
 }
 
 type World struct {
-	positions []Position
+	positions []Position aaaaaaaaaaaaaa
 }
 
 func (w *World) Add(p Position) error {
